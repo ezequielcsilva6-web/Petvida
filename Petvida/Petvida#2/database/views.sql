@@ -73,7 +73,6 @@ LEFT JOIN pagamentos p ON c.id = p.consulta_id
 WHERE c.status = 'concluida'
   AND (p.id IS NULL OR p.status = 'pendente');
 
--- Testes de visualização das views
 SELECT * FROM vw_consultas_completas LIMIT 20;
 SELECT * FROM vw_agenda_hoje;
 SELECT * FROM vw_faturamento_mensal LIMIT 20;

@@ -1,6 +1,5 @@
 USE petvida;
 
--- 1) Ranking de tutores que mais gastam
 SELECT
   ROW_NUMBER() OVER (ORDER BY total_gasto DESC) AS posicao,
   t.nome AS tutor,
@@ -19,7 +18,6 @@ FROM (
 JOIN tutores t ON t.id = gasto_tutor.tutor_id
 ORDER BY total_gasto DESC;
 
--- 2) Faturamento mensal
 SELECT
   YEAR(c.data_hora) AS ano,
   MONTH(c.data_hora) AS mes,
@@ -33,7 +31,6 @@ WHERE c.status <> 'cancelada'
 GROUP BY YEAR(c.data_hora), MONTH(c.data_hora)
 ORDER BY ano DESC, mes DESC;
 
--- 3) Animais sem consulta há 6+ meses
 SELECT
   a.id AS animal_id,
   a.nome AS animal,
@@ -52,7 +49,6 @@ GROUP BY a.id, a.nome, t.nome, e.nome
 HAVING MAX(c.data_hora) IS NULL OR MAX(c.data_hora) <= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
 ORDER BY ultima_consulta ASC;
 
--- 4) Dashboard financeiro
 SELECT
   COUNT(c.id) AS total_consultas,
   SUM(c.valor) AS faturamento_bruto,
@@ -68,7 +64,6 @@ FROM consultas c
 LEFT JOIN pagamentos p ON p.consulta_id = c.id
 WHERE c.status <> 'cancelada';
 
--- 5) Veterinário do mês
 SELECT
   v.nome AS veterinario,
   SUM(c.valor) AS total_faturado
@@ -82,7 +77,6 @@ GROUP BY v.id, v.nome
 ORDER BY total_faturado DESC
 LIMIT 1;
 
--- 6) Distribuição por espécie
 SELECT
   e.nome AS especie,
   COUNT(a.id) AS qtd_animais,

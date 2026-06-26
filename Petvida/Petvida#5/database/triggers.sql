@@ -67,20 +67,15 @@ END$$
 
 DELIMITER ;
 
--- Testes
--- 1) inserir consulta e checar log
 INSERT INTO consultas (animal_id, veterinario_id, data_hora, diagnostico, valor, status)
 VALUES (1, 1, '2026-07-02 09:00:00', 'Teste de trigger insert', 200.00, 'agendada');
 SELECT * FROM log_auditoria WHERE tabela_afetada = 'consultas' AND acao = 'INSERT' ORDER BY data_hora DESC LIMIT 1;
 
--- 2) atualizar status e checar log
 UPDATE consultas SET status = 'concluida' WHERE id = LAST_INSERT_ID();
 SELECT * FROM log_auditoria WHERE tabela_afetada = 'consultas' AND acao = 'UPDATE_STATUS' ORDER BY data_hora DESC LIMIT 1;
 
--- 3) tentar deletar consulta paga (bloqueio)
 UPDATE pagamentos SET status = 'pago', data_pagamento = NOW() WHERE consulta_id = LAST_INSERT_ID();
 DELETE FROM consultas WHERE id = LAST_INSERT_ID();
 
--- 4) testar trigger BEFORE UPDATE em pagamentos
 UPDATE pagamentos SET status = 'pago' WHERE consulta_id = 1 AND status <> 'pago';
 SELECT consulta_id, status, data_pagamento FROM pagamentos WHERE consulta_id = 1;

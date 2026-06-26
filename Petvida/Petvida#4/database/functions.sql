@@ -65,7 +65,6 @@ END$$
 
 DELIMITER ;
 
--- Testes com SELECTs usando functions
 SELECT nome, fn_idade_animal(data_nascimento) AS idade FROM animais;
 SELECT nome, fn_total_gasto_tutor(id) AS total_gasto FROM tutores;
 SELECT nome, fn_qtd_consultas_animal(id) AS total_consultas FROM animais;

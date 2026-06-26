@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Petvida</title>
+  <style>
+    :root {
+      --bg: #f4f9ff;
+      --card: #ffffff;
+      --primary: #1558d6;
+      --primary-dark: #0f47b1;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: #fff; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { margin: 0; font-size: 1.4rem; }
+    nav button { margin-left: 0.5rem; border: none; background: rgba(255,255,255,0.18); color: #fff; padding: 0.8rem 1rem; border-radius: 999px; cursor: pointer; }
+    nav button.active, nav button:hover { background: rgba(255,255,255,0.32); }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .grid { display: grid; gap: 1.25rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); }
+    .card h2 { margin-top: 0; }
+    .list { max-height: 320px; overflow: auto; padding: 0; margin: 0; list-style: none; }
+    .list li { padding: 0.9rem 0; border-bottom: 1px solid #e5e7eb; }
+    .list li:last-child { border-bottom: none; }
+    label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem; font: inherit; }
+    button.primary { background: var(--primary); color: white; border: none; padding: 0.9rem 1.25rem; border-radius: 999px; cursor: pointer; }
+    button.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    button.primary:hover { background: var(--primary-dark); }
+    .hidden { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid var(--border); max-height: 260px; overflow: auto; }
+    .status { display: inline-flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; color: var(--muted); }
+    .status span { width: 0.75rem; height: 0.75rem; border-radius: 999px; background: var(--success); display: inline-block; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .flex { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .card.wide { grid-column: span 2; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .card.wide { grid-column: auto; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Petvida</h1>
+      <p style="margin:0.25rem 0 0; color: rgba(255,255,255,0.85);">Frontend conectado ao backend Node/Express</p>
+    </div>
+    <nav>
+      <button class="active" data-tab="dashboard">Dashboard</button>
+      <button data-tab="tutores">Tutores</button>
+      <button data-tab="animais">Animais</button>
+      <button data-tab="consultas">Consultas</button>
+      <button data-tab="pagamentos">Pagamentos</button>
+      <button data-tab="relatorios">Relatórios</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="dashboard" class="card">
+      <h2>Visão geral</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>API status</h3>
+          <p id="api-status">Carregando...</p>
+        </div>
+        <div class="card">
+          <h3>Últimos dados</h3>
+          <pre id="dashboard-output">Nenhuma ação realizada ainda.</pre>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:1rem;">
+        <button class="primary" onclick="fetchDashboard()">Atualizar</button>
+        <button class="secondary" onclick="carregarTutores()">Ver Tutores</button>
+        <button class="secondary" onclick="carregarConsultas()">Ver Consultas</button>
+      </div>
+    </section>
+
+    <section id="tutores" class="card hidden">
+      <h2>Tutores</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Cadastrar novo tutor</h3>
+          <label for="tutor-nome">Nome</label>
+          <input id="tutor-nome" placeholder="Nome completo" />
+          <label for="tutor-cpf">CPF</label>
+          <input id="tutor-cpf" placeholder="000.000.000-00" />
+          <label for="tutor-email">Email</label>
+          <input id="tutor-email" type="email" placeholder="email@dominio.com" />
+          <label for="tutor-telefone">Telefone</label>
+          <input id="tutor-telefone" placeholder="(00) 00000-0000" />
+          <button class="primary" onclick="criarTutor()">Salvar tutor</button>
+        </div>
+        <div class="card">
+          <h3>Lista de tutores</h3>
+          <button class="primary" onclick="carregarTutores()">Atualizar lista</button>
+          <ul id="tutores-list" class="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="animais" class="card hidden">
+      <h2>Animais</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Cadastrar animal</h3>
+          <label for="animal-nome">Nome</label>
+          <input id="animal-nome" placeholder="Nome do animal" />
+          <label for="animal-especie">Espécie</label>
+          <select id="animal-especie"></select>
+          <label for="animal-raca">Raça</label>
+          <input id="animal-raca" placeholder="Raça" />
+          <label for="animal-nascimento">Data de nascimento</label>
+          <input id="animal-nascimento" type="date" />
+          <label for="animal-tutor">Tutor</label>
+          <select id="animal-tutor"></select>
+          <button class="primary" onclick="criarAnimal()">Salvar animal</button>
+        </div>
+        <div class="card">
+          <h3>Lista de animais</h3>
+          <button class="primary" onclick="carregarAnimais()">Atualizar lista</button>
+          <ul id="animais-list" class="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="consultas" class="card hidden">
+      <h2>Consultas</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Agendar consulta</h3>
+          <label for="consulta-animal">Animal</label>
+          <select id="consulta-animal"></select>
+          <label for="consulta-veterinario">Veterinário</label>
+          <select id="consulta-veterinario"></select>
+          <label for="consulta-data">Data e hora</label>
+          <input id="consulta-data" type="datetime-local" />
+          <label for="consulta-valor">Valor</label>
+          <input id="consulta-valor" type="number" step="0.01" placeholder="250.00" />
+          <button class="primary" onclick="agendarConsulta()">Agendar</button>
+        </div>
+        <div class="card">
+          <h3>Lista de consultas</h3>
+          <button class="primary" onclick="carregarConsultas()">Atualizar lista</button>
+          <ul id="consultas-list" class="list"></ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem;">
+        <h3>Concluir consulta</h3>
+        <label for="concluir-consulta-id">ID da consulta</label>
+        <input id="concluir-consulta-id" type="number" placeholder="ID da consulta" />
+        <label for="concluir-diagnostico">Diagnóstico</label>
+        <textarea id="concluir-diagnostico" rows="3" placeholder="Descrição do diagnóstico"></textarea>
+        <button class="primary" onclick="concluirConsulta()">Concluir</button>
+      </div>
+    </section>
+
+    <section id="pagamentos" class="card hidden">
+      <h2>Pagamentos</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Registrar pagamento</h3>
+          <label for="pagamento-consulta-id">ID da consulta</label>
+          <input id="pagamento-consulta-id" type="number" />
+          <label for="pagamento-valor">Valor pago</label>
+          <input id="pagamento-valor" type="number" step="0.01" placeholder="0.00" />
+          <label for="pagamento-forma">Forma de pagamento</label>
+          <select id="pagamento-forma">
+            <option value="pix">Pix</option>
+            <option value="cartao">Cartão</option>
+            <option value="dinheiro">Dinheiro</option>
+          </select>
+          <button class="primary" onclick="registrarPagamento()">Registrar pagamento</button>
+        </div>
+        <div class="card">
+          <h3>Lista de pagamentos</h3>
+          <button class="primary" onclick="carregarPagamentos()">Atualizar lista</button>
+          <ul id="pagamentos-list" class="list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="relatorios" class="card hidden">
+      <h2>Relatórios</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Ranking de tutores</h3>
+          <button class="primary" onclick="carregarRanking()">Carregar ranking</button>
+          <ul id="ranking-list" class="list"></ul>
+        </div>
+        <div class="card">
+          <h3>Resumo financeiro</h3>
+          <button class="primary" onclick="carregarFinanceiro()">Carregar relatório</button>
+          <pre id="financeiro-output">Sem dados carregados.</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const apiUrl = 'http://localhost:3000';
+    const tabs = document.querySelectorAll('nav button');
+    const sections = document.querySelectorAll('main section');
+
+    tabs.forEach(button => {
+      button.addEventListener('click', () => {
+        tabs.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const target = button.dataset.tab;
+        sections.forEach(section => {
+          section.classList.toggle('hidden', section.id !== target);
+        });
+      });
+    });
+
+    async function request(path, options = {}) {
+      const res = await fetch(`${apiUrl}${path}`, options);
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${body}`);
+      }
+      return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
+    }
+
+    async function fetchDashboard() {
+      try {
+        const status = await request('/');
+        document.getElementById('api-status').innerHTML = `<strong>API ativa</strong> <span></span>`;
+        document.getElementById('dashboard-output').textContent = JSON.stringify(status, null, 2);
+      } catch (error) {
+        document.getElementById('api-status').innerHTML = `<strong>Erro de conexão</strong>`;
+        document.getElementById('dashboard-output').textContent = error.message;
+      }
+    }
+
+    async function carregarTutores() {
+      const list = document.getElementById('tutores-list');
+      list.innerHTML = '<li>Carregando...</li>';
+      const tutors = await request('/tutores');
+      list.innerHTML = tutors.map(t => `<li><strong>${t.nome}</strong> • CPF: ${t.cpf || '-'} • Email: ${t.email || '-'} • Telefone: ${t.telefone || '-'}</li>`).join('') || '<li>Nenhum tutor encontrado.</li>';
+      atualizarTutorSelects(tutors);
+    }
+
+    function atualizarTutorSelects(tutors) {
+      const tutorSelect = document.getElementById('animal-tutor');
+      tutorSelect.innerHTML = tutors.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+    }
+
+    async function criarTutor() {
+      const nome = document.getElementById('tutor-nome').value;
+      const cpf = document.getElementById('tutor-cpf').value;
+      const email = document.getElementById('tutor-email').value;
+      const telefone = document.getElementById('tutor-telefone').value;
+      await request('/tutores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, cpf, email, telefone })
+      });
+      document.getElementById('tutor-nome').value = '';
+      document.getElementById('tutor-cpf').value = '';
+      document.getElementById('tutor-email').value = '';
+      document.getElementById('tutor-telefone').value = '';
+      carregarTutores();
+      alert('Tutor criado com sucesso!');
+    }
+
+    async function carregarAnimais() {
+      const list = document.getElementById('animais-list');
+      list.innerHTML = '<li>Carregando...</li>';
+      const animals = await request('/animais');
+      list.innerHTML = animals.map(a => `<li><strong>${a.nome}</strong> • Espécie: ${a.especie || '-'} • Tutor: ${a.tutor || '-'} • Nascimento: ${a.data_nascimento || '-'}</li>`).join('') || '<li>Nenhum animal encontrado.</li>';
+      atualizarConsultaAnimais(animals);
+    }
+
+    async function carregarVeterinarios() {
+      const vets = await request('/veterinarios');
+      const select = document.getElementById('consulta-veterinario');
+      select.innerHTML = vets.map(v => `<option value="${v.id}">${v.nome} (${v.especialidade || 'Sem especialidade'})</option>`).join('');
+    }
+
+    async function carregarEspecies() {
+      const especies = await request('/especies');
+      const select = document.getElementById('animal-especie');
+      select.innerHTML = especies.map(e => `<option value="${e.id}">${e.nome}</option>`).join('');
+    }
+
+    function atualizarConsultaAnimais(animals) {
+      const select = document.getElementById('consulta-animal');
+      select.innerHTML = animals.map(a => `<option value="${a.id}">${a.nome} (${a.tutor || 'Sem tutor'})</option>`).join('');
+    }
+
+    async function criarAnimal() {
+      const nome = document.getElementById('animal-nome').value;
+      const especie_id = Number(document.getElementById('animal-especie').value);
+      const raca = document.getElementById('animal-raca').value;
+      const data_nascimento = document.getElementById('animal-nascimento').value;
+      const tutor_id = Number(document.getElementById('animal-tutor').value);
+      await request('/animais', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, especie_id, raca, data_nascimento, tutor_id })
+      });
+      document.getElementById('animal-nome').value = '';
+      document.getElementById('animal-raca').value = '';
+      document.getElementById('animal-nascimento').value = '';
+      carregarAnimais();
+      alert('Animal cadastrado com sucesso!');
+    }
+
+    async function carregarConsultas() {
+      const list = document.getElementById('consultas-list');
+      list.innerHTML = '<li>Carregando...</li>';
+      const consultas = await request('/consultas');
+      list.innerHTML = consultas.map(c => `<li><strong>ID ${c.id}</strong> • Animal: ${c.animal} • Veterinário: ${c.veterinario} • ${c.data_hora} • Status: ${c.status || '-'}</li>`).join('') || '<li>Nenhuma consulta encontrada.</li>';
+    }
+
+    async function agendarConsulta() {
+      const animal_id = Number(document.getElementById('consulta-animal').value);
+      const veterinario_id = Number(document.getElementById('consulta-veterinario').value);
+      const data_hora = document.getElementById('consulta-data').value;
+      const valor = Number(document.getElementById('consulta-valor').value);
+      await request('/consultas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ animal_id, veterinario_id, data_hora, valor })
+      });
+      document.getElementById('consulta-data').value = '';
+      document.getElementById('consulta-valor').value = '';
+      carregarConsultas();
+      alert('Consulta agendada com sucesso!');
+    }
+
+    async function concluirConsulta() {
+      const id = Number(document.getElementById('concluir-consulta-id').value);
+      const diagnostico = document.getElementById('concluir-diagnostico').value;
+      await request(`/consultas/${id}/concluir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diagnostico })
+      });
+      document.getElementById('concluir-consulta-id').value = '';
+      document.getElementById('concluir-diagnostico').value = '';
+      carregarConsultas();
+      alert('Consulta concluída com sucesso!');
+    }
+
+    async function carregarPagamentos() {
+      const list = document.getElementById('pagamentos-list');
+      list.innerHTML = '<li>Carregando...</li>';
+      const pagamentos = await request('/pagamentos');
+      list.innerHTML = pagamentos.map(p => `<li><strong>ID ${p.id}</strong> • Consulta: ${p.consulta_id} • Valor: ${p.valor_pago} • Forma: ${p.forma_pagamento || '-'} • Status: ${p.status || '-'}</li>`).join('') || '<li>Nenhum pagamento encontrado.</li>';
+    }
+
+    async function registrarPagamento() {
+      const consulta_id = Number(document.getElementById('pagamento-consulta-id').value);
+      const valor_pago = Number(document.getElementById('pagamento-valor').value);
+      const forma_pagamento = document.getElementById('pagamento-forma').value;
+      await request(`/consultas/${consulta_id}/pagamento`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ forma_pagamento, valor_pago })
+      });
+      document.getElementById('pagamento-consulta-id').value = '';
+      document.getElementById('pagamento-valor').value = '';
+      carregarPagamentos();
+      alert('Pagamento registrado com sucesso!');
+    }
+
+    async function carregarRanking() {
+      const list = document.getElementById('ranking-list');
+      list.innerHTML = '<li>Carregando...</li>';
+      const ranking = await request('/reports/ranking-tutores');
+      list.innerHTML = ranking.map(r => `<li><strong>${r.posicao}. ${r.tutor}</strong> • Total gasto: R$ ${Number(r.total_gasto).toFixed(2)} • Consultas: ${r.qtd_consultas}</li>`).join('') || '<li>Nenhum ranking disponível.</li>';
+    }
+
+    async function carregarFinanceiro() {
+      const report = await request('/reports/financeiro');
+      document.getElementById('financeiro-output').textContent = JSON.stringify(report, null, 2);
+    }
+
+    async function inicializar() {
+      await fetchDashboard();
+      await carregarTutores();
+      await carregarEspecies();
+      await carregarAnimais();
+      await carregarVeterinarios();
+    }
+
+    inicializar().catch(error => {
+      document.getElementById('api-status').innerHTML = `<strong>Erro:</strong> ${error.message}`;
+      document.getElementById('dashboard-output').textContent = 'Não foi possível conectar ao backend.';
+    });
+  </script>
+</body>
+</html>

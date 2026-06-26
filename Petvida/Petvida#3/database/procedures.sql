@@ -117,21 +117,14 @@ END$$
 
 DELIMITER ;
 
--- Testes de sucesso
 CALL sp_agendar_consulta(1, 1, '2026-07-01 09:00:00', 250.00);
 CALL sp_concluir_consulta(1, 'Avaliação completa, nenhum problema grave.');
 CALL sp_registrar_pagamento(1, 'cartao');
 CALL sp_cancelar_consulta(4);
 CALL sp_cadastrar_animal('Zazu', 3, 'Calopsita', '2024-01-10', 2);
 
--- Testes de erro
--- animal não existe
 CALL sp_agendar_consulta(999, 1, '2026-07-01 10:00:00', 180.00);
--- consulta não existe ao concluir
 CALL sp_concluir_consulta(999, 'Teste de erro');
--- pagamento já pago
 CALL sp_registrar_pagamento(1, 'pix');
--- cancelar consulta não existente
 CALL sp_cancelar_consulta(999);
--- cadastrar animal com tutor inválido
 CALL sp_cadastrar_animal('Toby', 1, 'Vira-lata', '2023-09-01', 999);
